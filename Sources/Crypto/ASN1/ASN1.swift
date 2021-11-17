@@ -112,7 +112,7 @@ extension ASN1 {
     /// we're uninterested in.
     ///
     /// This type is not exposed to users of the API: it is only used internally for implementation of the user-level API.
-    fileprivate struct ASN1ParserNode {
+    struct ASN1ParserNode {
         /// The identifier.
         var identifier: ASN1Identifier
 
@@ -135,7 +135,7 @@ extension ASN1.ASN1ParserNode: CustomStringConvertible {
 // MARK: - Sequence
 extension ASN1 {
     /// Parse the node as an ASN.1 sequence.
-    internal static func sequence<T>(_ node: ASN1Node, _ builder: (inout ASN1.ASN1NodeCollection.Iterator) throws -> T) throws -> T {
+    static func sequence<T>(_ node: ASN1Node, _ builder: (inout ASN1.ASN1NodeCollection.Iterator) throws -> T) throws -> T {
         guard node.identifier == .sequence, case .constructed(let nodes) = node.content else {
             throw CryptoKitASN1Error.unexpectedFieldType
         }
@@ -157,7 +157,7 @@ extension ASN1 {
     /// Parses an optional explicitly tagged element. Throws on a tag mismatch, returns nil if the element simply isn't there.
     ///
     /// Expects to be used with the `ASN1.sequence` helper function.
-    internal static func optionalExplicitlyTagged<T>(_ nodes: inout ASN1.ASN1NodeCollection.Iterator, tagNumber: Int, tagClass: ASN1.ASN1Identifier.TagClass, _ builder: (ASN1Node) throws -> T) throws -> T? {
+    static func optionalExplicitlyTagged<T>(_ nodes: inout ASN1.ASN1NodeCollection.Iterator, tagNumber: Int, tagClass: ASN1.ASN1Identifier.TagClass, _ builder: (ASN1Node) throws -> T) throws -> T? {
         var localNodesCopy = nodes
         guard let node = localNodesCopy.next() else {
             // Node not present, return nil.
@@ -192,16 +192,16 @@ extension ASN1 {
 // MARK: - Parsing
 extension ASN1 {
     /// A parsed representation of ASN.1.
-    fileprivate struct ASN1ParseResult {
-        private static let maximumNodeDepth = 10
+    struct ASN1ParseResult {
+        static let maximumNodeDepth = 10
 
         var nodes: ArraySlice<ASN1ParserNode>
 
-        private init(_ nodes: ArraySlice<ASN1ParserNode>) {
+        init(_ nodes: ArraySlice<ASN1ParserNode>) {
             self.nodes = nodes
         }
 
-        fileprivate static func parse(_ data: ArraySlice<UInt8>) throws -> ASN1ParseResult {
+        static func parse(_ data: ArraySlice<UInt8>) throws -> ASN1ParseResult {
             var data = data
             var nodes = [ASN1ParserNode]()
             nodes.reserveCapacity(16)
@@ -215,7 +215,7 @@ extension ASN1 {
 
         /// Parses a single ASN.1 node from the data and appends it to the buffer. This may recursively
         /// call itself when there are child nodes for constructed nodes.
-        private static func parseNode(from data: inout ArraySlice<UInt8>, depth: Int, into nodes: inout [ASN1ParserNode]) throws {
+        static func parseNode(from data: inout ArraySlice<UInt8>, depth: Int, into nodes: inout [ASN1ParserNode]) throws {
             guard depth <= ASN1.ASN1ParseResult.maximumNodeDepth else {
                 // We defend ourselves against stack overflow by refusing to allocate more than 10 stack frames to
                 // the parsing.
@@ -290,12 +290,12 @@ extension ASN1 {
     ///
     /// Constructed ASN.1 nodes are made up of multiple child nodes. This object represents the collection of those child nodes.
     /// It allows us to lazily construct the child nodes, potentially skipping over them when we don't care about them.
-    internal struct ASN1NodeCollection {
-        private var nodes: ArraySlice<ASN1ParserNode>
+    struct ASN1NodeCollection {
+        var nodes: ArraySlice<ASN1ParserNode>
 
-        private var depth: Int
+        var depth: Int
 
-        fileprivate init(nodes: ArraySlice<ASN1ParserNode>, depth: Int) {
+        init(nodes: ArraySlice<ASN1ParserNode>, depth: Int) {
             self.nodes = nodes
             self.depth = depth
 
@@ -309,10 +309,10 @@ extension ASN1 {
 
 extension ASN1.ASN1NodeCollection: Sequence {
     struct Iterator: IteratorProtocol {
-        private var nodes: ArraySlice<ASN1.ASN1ParserNode>
-        private var depth: Int
+        var nodes: ArraySlice<ASN1.ASN1ParserNode>
+        var depth: Int
 
-        fileprivate init(nodes: ArraySlice<ASN1.ASN1ParserNode>, depth: Int) {
+        init(nodes: ArraySlice<ASN1.ASN1ParserNode>, depth: Int) {
             self.nodes = nodes
             self.depth = depth
         }
@@ -350,10 +350,10 @@ extension ASN1 {
     ///
     /// In this way, ASN.1 objects tend to form a "tree", where each object is represented by a single top-level constructed
     /// node that contains other objects and primitives, eventually reaching the bottom which is made up of primitive objects.
-    internal struct ASN1Node {
-        internal var identifier: ASN1Identifier
+    struct ASN1Node {
+        var identifier: ASN1Identifier
 
-        internal var content: Content
+        var content: Content
     }
 }
 
@@ -447,12 +447,12 @@ extension ASN1 {
 }
 
 // MARK: - Helpers
-internal protocol ASN1Parseable {
+protocol ASN1Parseable {
     init(asn1Encoded: ASN1.ASN1Node) throws
 }
 
 extension ASN1Parseable {
-    internal init(asn1Encoded sequenceNodeIterator: inout ASN1.ASN1NodeCollection.Iterator) throws {
+    init(asn1Encoded sequenceNodeIterator: inout ASN1.ASN1NodeCollection.Iterator) throws {
         guard let node = sequenceNodeIterator.next() else {
             throw CryptoKitASN1Error.invalidASN1Object
         }
@@ -460,17 +460,17 @@ extension ASN1Parseable {
         self = try .init(asn1Encoded: node)
     }
 
-    internal init(asn1Encoded: [UInt8]) throws {
+    init(asn1Encoded: [UInt8]) throws {
         self = try .init(asn1Encoded: ASN1.parse(asn1Encoded))
     }
 }
 
-internal protocol ASN1Serializable {
+protocol ASN1Serializable {
     func serialize(into coder: inout ASN1.Serializer) throws
 }
 
 extension ArraySlice where Element == UInt8 {
-    fileprivate mutating func readASN1Length() throws -> UInt? {
+    mutating func readASN1Length() throws -> UInt? {
         guard let firstByte = self.popFirst() else {
             return nil
         }
@@ -518,7 +518,7 @@ extension ArraySlice where Element == UInt8 {
 }
 
 extension FixedWidthInteger {
-    internal init<Bytes: Collection>(bigEndianBytes bytes: Bytes) throws where Bytes.Element == UInt8 {
+    init<Bytes: Collection>(bigEndianBytes bytes: Bytes) throws where Bytes.Element == UInt8 {
         guard bytes.count <= (Self.bitWidth / 8) else {
             throw CryptoKitASN1Error.invalidASN1Object
         }
@@ -535,11 +535,11 @@ extension FixedWidthInteger {
 }
 
 extension Array where Element == UInt8 {
-    fileprivate mutating func writeIdentifier(_ identifier: ASN1.ASN1Identifier) {
+    mutating func writeIdentifier(_ identifier: ASN1.ASN1Identifier) {
         self.append(identifier.baseTag)
     }
 
-    fileprivate mutating func moveRange(offset: Int, range: Range<Index>) {
+    mutating func moveRange(offset: Int, range: Range<Index>) {
         // We only bothered to implement this for positive offsets for now, the algorithm
         // generalises.
         precondition(offset > 0)
@@ -560,7 +560,7 @@ extension Array where Element == UInt8 {
 }
 
 extension Int {
-    fileprivate var bytesNeededToEncode: Int {
+    var bytesNeededToEncode: Int {
         // ASN.1 lengths are in two forms. If we can store the length in 7 bits, we should:
         // that requires only one byte. Otherwise, we need multiple bytes: work out how many,
         // plus one for the length of the length bytes.
@@ -578,7 +578,7 @@ extension Int {
 
 extension FixedWidthInteger {
     // Bytes needed to store a given integer.
-    internal var neededBytes: Int {
+    var neededBytes: Int {
         let neededBits = self.bitWidth - self.leadingZeroBitCount
         return (neededBits + 7) / 8
     }
