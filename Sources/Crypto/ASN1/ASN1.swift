@@ -350,7 +350,7 @@ extension ASN1 {
     ///
     /// In this way, ASN.1 objects tend to form a "tree", where each object is represented by a single top-level constructed
     /// node that contains other objects and primitives, eventually reaching the bottom which is made up of primitive objects.
-    struct ASN1Node {
+    public struct ASN1Node {
         var identifier: ASN1Identifier
 
         var content: Content
