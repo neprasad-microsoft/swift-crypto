@@ -201,7 +201,7 @@ extension ASN1 {
             self.nodes = nodes
         }
 
-        static func parse(_ data: ArraySlice<UInt8>) throws -> ASN1ParseResult {
+        public static func parse(_ data: ArraySlice<UInt8>) throws -> ASN1ParseResult {
             var data = data
             var nodes = [ASN1ParserNode]()
             nodes.reserveCapacity(16)
@@ -258,11 +258,11 @@ extension ASN1 {
 extension ASN1.ASN1ParseResult: Hashable { }
 
 extension ASN1 {
-    static func parse(_ data: [UInt8]) throws -> ASN1Node {
+    public static func parse(_ data: [UInt8]) throws -> ASN1Node {
         return try parse(data[...])
     }
 
-    static func parse(_ data: ArraySlice<UInt8>) throws -> ASN1Node {
+    public static func parse(_ data: ArraySlice<UInt8>) throws -> ASN1Node {
         var result = try ASN1ParseResult.parse(data)
 
         // There will always be at least one node if the above didn't throw, so we can safely just removeFirst here.
