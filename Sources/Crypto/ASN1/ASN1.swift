@@ -103,7 +103,7 @@ import Foundation
 // generally: that is, we don't hard-code special knowledge of these formats as part of the parsing process. Instead we have written a
 // parser that can divide the world of ASN.1 into parseable chunks, and then we try to decode specific formats from those chunks. This
 // allows us to extend things in the future without too much pain.
-internal enum ASN1 { }
+enum ASN1 { }
 
 // MARK: - Parser Node
 extension ASN1 {
