@@ -22,10 +22,10 @@ extension ASN1 {
     /// It represents a node in an OID hierarchy, and is usually represented as an ordered sequence of numbers.
     ///
     /// We mostly don't care about the semantics of the thing, we just care about being able to store and compare them.
-    struct ASN1ObjectIdentifier: ASN1Parseable, ASN1Serializable {
+    public struct ASN1ObjectIdentifier: ASN1Parseable, ASN1Serializable {
         private var oidComponents: [UInt]
 
-        init(asn1Encoded node: ASN1.ASN1Node) throws {
+        public init(asn1Encoded node: ASN1.ASN1Node) throws {
             guard node.identifier == .objectIdentifier else {
                 throw CryptoKitASN1Error.unexpectedFieldType
             }
@@ -86,7 +86,7 @@ extension ASN1 {
             self.oidComponents = oidComponents
         }
 
-        func serialize(into coder: inout ASN1.Serializer) throws {
+        public func serialize(into coder: inout ASN1.Serializer) throws {
             coder.appendPrimitiveNode(identifier: .objectIdentifier) { bytes in
                 var components = self.oidComponents[...]
                 guard let firstComponent = components.popFirst(), let secondComponent = components.popFirst() else {
@@ -102,7 +102,7 @@ extension ASN1 {
             }
         }
 
-        private static func writeOIDSubidentifier(_ identifier: UInt, into array: inout [UInt8]) {
+        public static func writeOIDSubidentifier(_ identifier: UInt, into array: inout [UInt8]) {
             // An OID subidentifier is written as an integer over 7-bit bytes, where the last byte has the top bit unset.
             // The first thing we need is to know how many bits we need to write
             let bitsToWrite = UInt.bitWidth - identifier.leadingZeroBitCount
@@ -130,13 +130,13 @@ extension ASN1 {
 extension ASN1.ASN1ObjectIdentifier: Hashable {}
 
 extension ASN1.ASN1ObjectIdentifier: ExpressibleByArrayLiteral {
-        init(arrayLiteral elements: UInt...) {
+        public init(arrayLiteral elements: UInt...) {
             self.oidComponents = elements
         }
     }
 
 extension ASN1.ASN1ObjectIdentifier {
-    enum NamedCurves {
+    public enum NamedCurves {
         static let secp256r1: ASN1.ASN1ObjectIdentifier = [1, 2, 840, 10_045, 3, 1, 7]
 
         static let secp384r1: ASN1.ASN1ObjectIdentifier = [1, 3, 132, 0, 34]
@@ -144,13 +144,13 @@ extension ASN1.ASN1ObjectIdentifier {
         static let secp521r1: ASN1.ASN1ObjectIdentifier = [1, 3, 132, 0, 35]
     }
 
-    enum AlgorithmIdentifier {
+    public enum AlgorithmIdentifier {
         static let idEcPublicKey: ASN1.ASN1ObjectIdentifier = [1, 2, 840, 10_045, 2, 1]
     }
 }
 
 extension ArraySlice where Element == UInt8 {
-    mutating fileprivate func readOIDSubidentifier() throws -> UInt {
+    mutating public func readOIDSubidentifier() throws -> UInt {
         // In principle OID subidentifiers can be too large to fit into a UInt. We are choosing to not care about that
         // because for us it shouldn't matter.
         guard let subidentifierEndIndex = self.firstIndex(where: { $0 & 0x80 == 0x00 }) else {
@@ -166,7 +166,7 @@ extension ArraySlice where Element == UInt8 {
 }
 
 extension UInt {
-    fileprivate init<Bytes: Collection>(sevenBitBigEndianBytes bytes: Bytes) throws where Bytes.Element == UInt8 {
+    public init<Bytes: Collection>(sevenBitBigEndianBytes bytes: Bytes) throws where Bytes.Element == UInt8 {
         // We need to know how many bytes we _need_ to store this "int".
         guard ((bytes.count * 7) + 7) / 8 <= MemoryLayout<UInt>.size else {
             throw CryptoKitASN1Error.invalidASN1Object
