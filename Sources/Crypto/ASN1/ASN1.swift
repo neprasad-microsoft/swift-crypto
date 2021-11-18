@@ -112,7 +112,7 @@ extension ASN1 {
     /// we're uninterested in.
     ///
     /// This type is not exposed to users of the API: it is only used internally for implementation of the user-level API.
-    struct ASN1ParserNode {
+    public struct ASN1ParserNode {
         /// The identifier.
         var identifier: ASN1Identifier
 
@@ -127,7 +127,7 @@ extension ASN1 {
 extension ASN1.ASN1ParserNode: Hashable { }
 
 extension ASN1.ASN1ParserNode: CustomStringConvertible {
-    var description: String {
+    public var description: String {
         return "ASN1.ASN1ParserNode(identifier: \(self.identifier), depth: \(self.depth), dataBytes: \(self.dataBytes?.count ?? 0))"
     }
 }
@@ -192,7 +192,7 @@ extension ASN1 {
 // MARK: - Parsing
 extension ASN1 {
     /// A parsed representation of ASN.1.
-    struct ASN1ParseResult {
+    public struct ASN1ParseResult {
         static let maximumNodeDepth = 50
 
         var nodes: ArraySlice<ASN1ParserNode>
@@ -290,7 +290,7 @@ extension ASN1 {
     ///
     /// Constructed ASN.1 nodes are made up of multiple child nodes. This object represents the collection of those child nodes.
     /// It allows us to lazily construct the child nodes, potentially skipping over them when we don't care about them.
-    struct ASN1NodeCollection {
+    public struct ASN1NodeCollection {
         var nodes: ArraySlice<ASN1ParserNode>
 
         var depth: Int
@@ -308,7 +308,7 @@ extension ASN1 {
 }
 
 extension ASN1.ASN1NodeCollection: Sequence {
-    struct Iterator: IteratorProtocol {
+    public struct Iterator: IteratorProtocol {
         var nodes: ArraySlice<ASN1.ASN1ParserNode>
         var depth: Int
 
@@ -317,7 +317,7 @@ extension ASN1.ASN1NodeCollection: Sequence {
             self.depth = depth
         }
 
-        mutating func next() -> ASN1.ASN1Node? {
+        public mutating func next() -> ASN1.ASN1Node? {
             guard let nextNode = self.nodes.popFirst() else {
                 return nil
             }
@@ -335,7 +335,7 @@ extension ASN1.ASN1NodeCollection: Sequence {
         }
     }
 
-    func makeIterator() -> Iterator {
+    public func makeIterator() -> Iterator {
         return Iterator(nodes: self.nodes, depth: self.depth)
     }
 }
@@ -360,7 +360,7 @@ extension ASN1 {
 // MARK: - ASN1Node.Content
 extension ASN1.ASN1Node {
     /// The content of a single ASN1Node.
-    enum Content {
+    public enum Content {
         case constructed(ASN1.ASN1NodeCollection)
         case primitive(ArraySlice<UInt8>)
     }
@@ -368,7 +368,7 @@ extension ASN1.ASN1Node {
 
 // MARK: - Serializing
 extension ASN1 {
-    struct Serializer {
+    public struct Serializer {
         private(set) var serializedBytes: [UInt8]
 
         init() {
@@ -447,7 +447,7 @@ extension ASN1 {
 }
 
 // MARK: - Helpers
-protocol ASN1Parseable {
+public protocol ASN1Parseable {
     init(asn1Encoded: ASN1.ASN1Node) throws
 }
 
@@ -465,12 +465,12 @@ extension ASN1Parseable {
     }
 }
 
-protocol ASN1Serializable {
+public protocol ASN1Serializable {
     func serialize(into coder: inout ASN1.Serializer) throws
 }
 
 extension ArraySlice where Element == UInt8 {
-    mutating func readASN1Length() throws -> UInt? {
+    mutating public func readASN1Length() throws -> UInt? {
         guard let firstByte = self.popFirst() else {
             return nil
         }

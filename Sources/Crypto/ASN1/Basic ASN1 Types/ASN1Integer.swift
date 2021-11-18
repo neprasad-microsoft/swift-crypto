@@ -35,7 +35,7 @@ protocol ASN1IntegerRepresentable: ASN1Parseable, ASN1Serializable {
 }
 
 extension ASN1IntegerRepresentable {
-    internal init(asn1Encoded node: ASN1.ASN1Node) throws {
+    public init(asn1Encoded node: ASN1.ASN1Node) throws {
         guard node.identifier == .integer else {
             throw CryptoKitASN1Error.unexpectedFieldType
         }
@@ -75,7 +75,7 @@ extension ASN1IntegerRepresentable {
         self = try Self(asn1IntegerBytes: dataBytes)
     }
 
-    internal func serialize(into coder: inout ASN1.Serializer) throws {
+    public func serialize(into coder: inout ASN1.Serializer) throws {
         coder.appendPrimitiveNode(identifier: .integer) { bytes in
             self.withBigEndianIntegerBytes { integerBytes in
                 // If the number of bytes is 0, we're encoding a zero. That actually _does_ require one byte.
