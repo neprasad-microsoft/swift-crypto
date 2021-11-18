@@ -135,7 +135,7 @@ extension ASN1.ASN1ParserNode: CustomStringConvertible {
 // MARK: - Sequence
 extension ASN1 {
     /// Parse the node as an ASN.1 sequence.
-    static func sequence<T>(_ node: ASN1Node, _ builder: (inout ASN1.ASN1NodeCollection.Iterator) throws -> T) throws -> T {
+    public static func sequence<T>(_ node: ASN1Node, _ builder: (inout ASN1.ASN1NodeCollection.Iterator) throws -> T) throws -> T {
         guard node.identifier == .sequence, case .constructed(let nodes) = node.content else {
             throw CryptoKitASN1Error.unexpectedFieldType
         }
