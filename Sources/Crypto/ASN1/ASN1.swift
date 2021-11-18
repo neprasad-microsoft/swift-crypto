@@ -193,7 +193,7 @@ extension ASN1 {
 extension ASN1 {
     /// A parsed representation of ASN.1.
     struct ASN1ParseResult {
-        static let maximumNodeDepth = 10
+        static let maximumNodeDepth = 20
 
         var nodes: ArraySlice<ASN1ParserNode>
 
